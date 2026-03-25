@@ -1,4 +1,4 @@
-# Proyecto Usuarios Web App
+# Sistema de Gestión de Usuarios
 
 Aplicación web completa en Java para gestión de usuarios utilizando Maven, Servlets, JSP y MySQL.
 
@@ -7,46 +7,33 @@ Aplicación web completa en Java para gestión de usuarios utilizando Maven, Ser
 - Java 11 o superior
 - Apache Tomcat 10
 - MySQL Server
-- Maven 3.6+
+- Maven 3.6+ (opcional)
 
-## 🚀 Configuración
+## 🚀 Configuración Rápida
 
 ### 1. Base de Datos
 
-Ejecuta el script `database_setup.sql` en tu servidor MySQL para crear la base de datos y tabla:
-
+**Opción A: Ejecutar script automático**
 ```bash
-mysql -u root -p < database_setup.sql
+java -cp "target/classes;lib/*" com.mycompany.test.FixDatabase
 ```
 
-O ejecuta manualmente:
-
-```sql
-CREATE DATABASE nelson_prueba;
-USE nelson_prueba;
-
-CREATE TABLE usuarios (
-    idUsuario INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    correo VARCHAR(100) NOT NULL UNIQUE,
-    contrasena VARCHAR(100) NOT NULL,
-    rol VARCHAR(50) NOT NULL DEFAULT 'USER'
-);
+**Opción B: Manual**
+```bash
+mysql -u root -p < database_setup.sql
 ```
 
 ### 2. Compilar el Proyecto
 
 ```bash
+# Opción A: Sin Maven
+javac -cp "target/classes;lib/*" -d target/classes src/main/java/com/mycompany/*/*.java
+
+# Opción B: Con Maven
 mvn clean compile
 ```
 
-### 3. Generar WAR
-
-```bash
-mvn clean package
-```
-
-### 4. Desplegar en Tomcat
+### 3. Desplegar en Tomcat
 
 Copia el archivo `target/proyecto-usuarios.war` al directorio `webapps` de Tomcat.
 
@@ -63,8 +50,11 @@ src/
 │   │       │   └── Usuario.java
 │   │       ├── dao/
 │   │       │   └── UsuarioDAO.java
-│   │       └── servlet/
-│   │           └── UsuarioServlet.java
+│   │       ├── servlet/
+│   │       │   └── UsuarioServlet.java
+│   │       └── test/
+│   │           ├── TestConexion.java
+│   │           └── FixDatabase.java
 │   └── webapp/
 │       ├── WEB-INF/
 │       │   └── web.xml
@@ -72,6 +62,10 @@ src/
 │       ├── crear.jsp
 │       ├── listar.jsp
 │       └── editar.jsp
+├── lib/
+│   └── mysql-connector-j-8.3.0.jar
+├── database_setup.sql
+├── fix_database.bat
 └── pom.xml
 ```
 
@@ -108,12 +102,63 @@ Una vez desplegado en Tomcat, accede a:
 
 ### Características
 - 📱 Interfaz responsive y moderna
-- 🔔 Mensajes de éxito y error
+- 🔔 Mensajes de éxito y error detallados
 - 🛡️ Protección contra inyección SQL (PreparedStatement)
 - 🎨 Diseño limpio y profesional
 - ⚡ Compatible con Apache Tomcat 10
+- 📊 Logs detallados para depuración
+- 🆔 **Validación de ID único**: Previene duplicados de ID
+- ✉️ **Validación de correo único**: Evita correos duplicados
+- 🔒 **Control de integridad**: Solo permite IDs disponibles
+- ⚡ **Validación en tiempo real**: Verifica ID mientras escribes
+- 🔐 **Seguridad de contraseñas**: No se almacenan en el formulario
+- 🎯 **Feedback visual inmediato**: Colores rojo/verde para validación
 
-## 🎯 Roles Disponibles
+## 🧪 Pruebas
+
+### Ejecutar Pruebas Completas
+
+```bash
+java -cp "target/classes;lib/*" com.mycompany.test.TestConexion
+```
+
+Esta prueba verifica:
+- ✅ Conexión a la base de datos
+- ✅ Operaciones CRUD (Crear, Leer, Actualizar, Eliminar)
+- ✅ Manejo de errores
+- ✅ Logs detallados
+
+**Nota**: La prueba crea y elimina un usuario automáticamente para verificar el funcionamiento.
+
+### Ejecutar Pruebas de Validación
+
+```bash
+java -cp "target/classes;lib/*" com.mycompany.test.TestValidacion
+```
+
+Esta prueba verifica:
+- ✅ **Validación de ID duplicado**: Rechaza crear usuarios con ID existente
+- ✅ **Validación de correo duplicado**: Rechaza crear usuarios con correo existente
+- ✅ **Creación con ID único**: Permite crear usuarios con ID nuevos
+- ✅ **Integridad de datos**: Mantiene la consistencia de la base de datos
+
+### Ejecutar Pruebas de Validación de ID
+
+```bash
+java -cp "target/classes;lib/*" com.mycompany.test.TestValidacionID
+```
+
+Esta prueba verifica:
+- ✅ **Método existeID()**: Funcionamiento correcto de verificación
+- ✅ **Validación en tiempo real**: Preparación para validación AJAX
+- ✅ **Rechazo de duplicados**: IDs duplicados correctamente rechazados
+- ✅ **Aceptación de únicos**: IDs nuevos correctamente aceptados
+
+## 👥 Usuarios
+
+La base de datos inicia vacía. Los usuarios se crean únicamente a través de la interfaz web.
+
+### Roles Disponibles
 
 - **ADMIN**: Administrador del sistema
 - **USER**: Usuario regular
@@ -123,6 +168,8 @@ Una vez desplegado en Tomcat, accede a:
 
 - ✅ **Las contraseñas se almacenan con hash MD5** para mayor seguridad
 - ✅ **Protección contra inyección SQL** mediante PreparedStatement
+- ✅ **Validación de entrada en el servidor**
+- ✅ **Configuración de codificación UTF-8**
 - ⚠️ **Nota importante**: MD5 es básico para demostración. En producción considera:
   - **Algoritmos más seguros**: BCrypt, PBKDF2, Argon2
   - **Salt**: Añadir salt único por contraseña
@@ -137,19 +184,40 @@ Una vez desplegado en Tomcat, accede a:
 
 ### Problemas Comunes
 
-1. **Error de conexión MySQL**
+1. **Driver MySQL no encontrado**
+   ```bash
+   # Asegurarse que el driver esté en lib/
+   # Descargar si es necesario:
+   powershell -Command "Invoke-WebRequest -Uri 'https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.3.0/mysql-connector-j-8.3.0.jar' -OutFile 'lib/mysql-connector-j-8.3.0.jar'"
+   ```
+
+2. **Error de conexión MySQL**
    - Verifica que MySQL esté corriendo
    - Confirma usuario/contraseña en `ConexionDB.java`
-   - Asegúrate que la base de datos `nelson_prueba` exista
+   - Ejecuta: `java -cp "target/classes;lib/*" com.mycompany.test.FixDatabase`
 
-2. **Error 404 en Tomcat**
+3. **Error AUTO_INCREMENT**
+   - La tabla necesita ser recreada correctamente
+   - Ejecuta: `java -cp "target/classes;lib/*" com.mycompany.test.FixDatabase`
+
+4. **Error 404 en Tomcat**
    - Verifica que el WAR se desplegó correctamente
    - Confirma el nombre del contexto (`proyecto-usuarios`)
 
-3. **Error de compilación**
+5. **Error de compilación**
    - Asegúrate de tener Java 11+
-   - Verifica las dependencias Maven
+   - Verifica las dependencias en `lib/`
+
+### Logs y Depuración
+
+La aplicación incluye mensajes de consola detallados:
+- Conexiones a base de datos
+- Operaciones CRUD con resultados
+- Errores SQL con códigos de estado
+- Traza completa de excepciones
 
 ## 📝 Licencia
 
 Proyecto educativo para demostrar el uso de Java Web Technologies.
+
+**Autor**: Nelson Diaz

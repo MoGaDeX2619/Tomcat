@@ -9,8 +9,11 @@ COLLATE utf8mb4_unicode_ci;
 -- Usar la base de datos
 USE nelson_prueba;
 
--- Crear tabla de usuarios
-CREATE TABLE IF NOT EXISTS usuarios (
+-- Eliminar la tabla si existe para recrearla correctamente
+DROP TABLE IF EXISTS usuarios;
+
+-- Crear tabla de usuarios con AUTO_INCREMENT correcto
+CREATE TABLE usuarios (
     idUsuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     correo VARCHAR(100) NOT NULL UNIQUE,
@@ -20,15 +23,5 @@ CREATE TABLE IF NOT EXISTS usuarios (
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Insertar datos de ejemplo con contraseñas hasheadas en MD5
--- admin123 -> 0192023a7bbd73250516f069df18b500
--- user123 -> 482c811da5d5b4bc6d497ffa98491e38
--- mod123 -> 5d9c68c6c50ed3d02a2fcf54f1e80dbd
-INSERT INTO usuarios (nombre, correo, contrasena, rol) VALUES
-('Administrador', 'admin@ejemplo.com', '0192023a7bbd73250516f069df18b500', 'ADMIN'),
-('Usuario Ejemplo', 'usuario@ejemplo.com', '482c811da5d5b4bc6d497ffa98491e38', 'USER'),
-('Moderador Sistema', 'moderador@ejemplo.com', '5d9c68c6c50ed3d02a2fcf54f1e80dbd', 'MODERATOR')
-ON DUPLICATE KEY UPDATE nombre=VALUES(nombre);
-
--- Mostrar los usuarios insertados
-SELECT * FROM usuarios;
+-- Verificar la estructura de la tabla
+DESCRIBE usuarios;

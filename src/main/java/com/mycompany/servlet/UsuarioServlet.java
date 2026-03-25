@@ -43,8 +43,14 @@ public class UsuarioServlet extends HttpServlet {
             case "listar":
                 listarUsuarios(request, response);
                 break;
+            case "crear":
+                crearUsuario(request, response);
+                break;
             case "editar":
                 mostrarFormularioEditar(request, response);
+                break;
+            case "actualizar":
+                actualizarUsuario(request, response);
                 break;
             case "eliminar":
                 eliminarUsuario(request, response);
@@ -81,8 +87,11 @@ public class UsuarioServlet extends HttpServlet {
     private void listarUsuarios(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        System.out.println("Listando usuarios...");
         List<Usuario> usuarios = usuarioDAO.listarUsuarios();
         request.setAttribute("usuarios", usuarios);
+        
+        System.out.println("Total de usuarios a mostrar en JSP: " + (usuarios != null ? usuarios.size() : 0));
         
         // El forward debe ser el final del método
         request.getRequestDispatcher("/listar.jsp").forward(request, response);
@@ -114,31 +123,60 @@ public class UsuarioServlet extends HttpServlet {
     private void crearUsuario(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        String idUsuarioParam = request.getParameter("idUsuario");
         String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");
         String contrasena = request.getParameter("contrasena");
         String rol = request.getParameter("rol");
+        
+        System.out.println("Intentando crear usuario - ID: " + idUsuarioParam + ", Nombre: " + nombre + ", Correo: " + correo + ", Rol: " + rol);
         
         // Convertir contraseña a MD5 antes de validar
         String contrasenaHasheada = convertirMD5(contrasena);
         
         List<String> errores = validarUsuario(nombre, correo, contrasena, rol);
         
+        // Validar ID si se proporciona
+        int idUsuario = 0;
+        if (idUsuarioParam != null && !idUsuarioParam.trim().isEmpty()) {
+            try {
+                idUsuario = Integer.parseInt(idUsuarioParam);
+                if (idUsuario <= 0) {
+                    errores.add("El ID debe ser un número positivo");
+                }
+            } catch (NumberFormatException e) {
+                errores.add("El ID debe ser un número válido");
+            }
+        }
+        
         if (!errores.isEmpty()) {
+            System.out.println("Errores de validación: " + errores);
             request.setAttribute("errores", errores);
             // Se pasa un objeto temporal para no perder los datos escritos en el form
-            request.setAttribute("usuario", new Usuario(0, nombre, correo, contrasena, rol));
+            request.setAttribute("usuario", new Usuario(idUsuario, nombre, correo, contrasena, rol));
             request.getRequestDispatcher("/crear.jsp").forward(request, response);
             return;
         }
         
-        Usuario usuario = new Usuario(nombre, correo, contrasenaHasheada, rol);
+        Usuario usuario = new Usuario(idUsuario, nombre, correo, contrasenaHasheada, rol);
         
-        if (usuarioDAO.crearUsuario(usuario)) {
+        System.out.println("Llamando a usuarioDAO.crearUsuarioConID()");
+        boolean creado = usuarioDAO.crearUsuarioConID(usuario);
+        
+        if (creado) {
+            System.out.println("Usuario creado exitosamente");
             request.setAttribute("mensaje", "Usuario creado exitosamente");
             request.setAttribute("tipoMensaje", "exito");
         } else {
-            request.setAttribute("mensaje", "Error al crear el usuario");
+            System.out.println("Error al crear el usuario");
+            // Verificar si el error fue por ID duplicado o correo duplicado
+            if (idUsuario > 0 && usuarioDAO.existeID(idUsuario)) {
+                request.setAttribute("mensaje", "No se pudo crear el usuario: El ID " + idUsuario + " ya está en uso. Por favor, elige otro ID o elimina el usuario existente primero.");
+            } else if (usuarioDAO.existeCorreo(correo)) {
+                request.setAttribute("mensaje", "No se pudo crear el usuario: El correo electrónico ya está registrado. Por favor, usa otro correo.");
+            } else {
+                request.setAttribute("mensaje", "Error al crear el usuario. Verifica la consola para más detalles.");
+            }
             request.setAttribute("tipoMensaje", "error");
         }
         
@@ -225,8 +263,26 @@ public class UsuarioServlet extends HttpServlet {
         
         if (contrasena == null || contrasena.trim().isEmpty()) {
             errores.add("La contraseña no puede estar vacía");
-        } else if (contrasena.length() < 4) {
-            errores.add("La contraseña debe tener al menos 4 caracteres");
+        } else {
+            // Validar longitud mínima
+            if (contrasena.length() < 6) {
+                errores.add("La contraseña debe tener al menos 6 caracteres");
+            }
+            
+            // Validar que tenga al menos una mayúscula
+            if (!contrasena.matches(".*[A-Z].*")) {
+                errores.add("La contraseña debe contener al menos una letra mayúscula");
+            }
+            
+            // Validar que tenga al menos un número
+            if (!contrasena.matches(".*[0-9].*")) {
+                errores.add("La contraseña debe contener al menos un número");
+            }
+            
+            // Validar que tenga al menos un símbolo
+            if (!contrasena.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+                errores.add("La contraseña debe contener al menos un símbolo (!@#$%^&*)");
+            }
         }
         
         if (rol == null || rol.trim().isEmpty()) {
