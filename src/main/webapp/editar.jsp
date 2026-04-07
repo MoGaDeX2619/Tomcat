@@ -5,26 +5,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Usuario</title>
+    <title>Editar Usuario | E-form</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
         }
         .container {
             max-width: 600px;
             margin: 0 auto;
-            background-color: white;
+            background: rgba(255, 255, 255, 0.15); /* Ultra transparente */
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 102, 204, 0.1);
+            backdrop-filter: blur(1px); /* Casi sin blur */
+            z-index: 10;
+            position: relative;
         }
+        
+        .background-logo {
+            position: fixed;
+            bottom: 200px; /* Más abajo para que sea visible */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            opacity: 0.4; /* Más opaco para que las letras se vean mejor */
+            pointer-events: none;
+        }
+        
+        .background-logo img {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid rgba(0, 102, 204, 0.25);
+            box-shadow: 0 6px 20px rgba(0, 102, 204, 0.35);
+        }
+        
+        .background-logo .brand-name {
+            font-size: 38px;
+            font-weight: 800;
+            color: #0066cc;
+            text-align: center;
+            letter-spacing: -2px;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .logo-image {
+            max-width: 80px;
+            height: auto;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+        
+        .brand-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0066cc;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
         h1 {
-            color: #333;
+            color: #1a1a1a;
             text-align: center;
             margin-bottom: 30px;
+            font-size: 24px;
         }
         .form-group {
             margin-bottom: 20px;
@@ -53,26 +110,32 @@
             cursor: not-allowed;
         }
         .btn {
-            background-color: #007bff;
+            background: #0066cc;
             color: white;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
             text-decoration: none;
             display: inline-block;
             margin-right: 10px;
-            transition: background-color 0.3s;
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
+        
         .btn:hover {
-            background-color: #0056b3;
+            background: #004499;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
         }
+        
         .btn-cancel {
-            background-color: #6c757d;
+            background: #0066cc;
+            color: white;
         }
+        
         .btn-cancel:hover {
-            background-color: #545b62;
+            background: #004499;
         }
         .buttons {
             text-align: center;
@@ -131,26 +194,29 @@
                 <strong>ID de Usuario:</strong> <%= usuario.getIdUsuario() %>
             </div>
             
-            <form action="usuario" method="post">
+            <form action="usuario" method="post" autocomplete="off">
                 <input type="hidden" name="accion" value="actualizar">
                 <input type="hidden" name="idUsuario" value="<%= usuario.getIdUsuario() %>">
                 
                 <div class="form-group">
                     <label for="nombre">Nombre:</label>
                     <input type="text" id="nombre" name="nombre" required
-                           value="<%= usuario.getNombre() %>">
+                           value="<%= usuario.getNombre() %>"
+                           autocomplete="off">
                 </div>
                 
                 <div class="form-group">
-                    <label for="correo">Correo electrónico:</label>
+                    <label for="correo">Correo:</label>
                     <input type="email" id="correo" name="correo" required
-                           value="<%= usuario.getCorreo() %>">
+                           value="<%= usuario.getCorreo() %>"
+                           autocomplete="off">
                 </div>
                 
                 <div class="form-group">
                     <label for="contrasena">Contraseña:</label>
                     <input type="password" id="contrasena" name="contrasena" required
-                           value="<%= usuario.getContrasena() %>">
+                           value="<%= usuario.getContrasena() %>"
+                           autocomplete="new-password">
                     <small style="color: #666; font-size: 12px;">
                         Debe tener al menos 4 caracteres
                     </small>
@@ -182,6 +248,13 @@
                 <a href="usuario?accion=listar" class="btn">📋 Ver Lista de Usuarios</a>
             </div>
         <% } %>
+    </div>
+    
+    <!-- Logo de fondo grande -->
+    <div class="background-logo">
+        <img src="images/WhatsApp Image 2026-04-07 at 10.59.53 AM.jpeg" alt="E-form Logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="brand-name" style="display: none;">E-form</div>
     </div>
 </body>
 </html>

@@ -2,8 +2,8 @@
 <web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee 
-         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
-         version="6.0">
+         https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+         version="5.0">
     
     <display-name>Proyecto Usuarios Web App</display-name>
     
@@ -12,6 +12,17 @@
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
     
+    <!-- Configuración del Servlet de Usuarios -->
+    <servlet>
+        <servlet-name>UsuarioServlet</servlet-name>
+        <servlet-class>com.mycompany.servlet.UsuarioServlet</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>UsuarioServlet</servlet-name>
+        <url-pattern>/usuario</url-pattern>
+    </servlet-mapping>
+    
     <!-- Configuración de codificación de caracteres -->
     <filter>
         <filter-name>EncodingFilter</filter-name>
@@ -19,6 +30,10 @@
         <init-param>
             <param-name>encoding</param-name>
             <param-value>UTF-8</param-value>
+        </init-param>
+        <init-param>
+            <param-name>forceEncoding</param-name>
+            <param-value>true</param-value>
         </init-param>
     </filter>
     

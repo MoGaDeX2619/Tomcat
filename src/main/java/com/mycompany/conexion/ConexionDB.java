@@ -11,7 +11,7 @@ import java.sql.SQLException;
 public class ConexionDB {
     
     // Datos de conexión
-    private static final String URL = "jdbc:mysql://127.0.0.1:3306/nelson_prueba";
+    private static final String URL = "jdbc:mysql://127.0.0.1:3306/nelson_prueba?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
     private static final String USUARIO = "root";
     private static final String CONTRASENA = "mogadex123";
     

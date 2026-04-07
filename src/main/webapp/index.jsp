@@ -4,22 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control | Sistema de Usuarios</title>
+    <title>Panel de Control | E-form</title>
     
     <style>
         /* -----------------------------------------------------------
            1. CSS Reset & Variables de Marca
            ----------------------------------------------------------- */
         :root {
-            --brand-primary: #1d4ed8;       /* Azul Principal Corporativo */
-            --brand-secondary: #e0f2fe;     /* Azul Claro de Acento */
+            --brand-primary: #0066cc;       /* Azul E-form Principal */
+            --brand-secondary: #e6f2ff;     /* Azul Claro de Acento */
+            --brand-dark: #004499;          /* Azul Oscuro */
+            --brand-light: #f0f7ff;         /* Azul Muy Claro */
             --text-on-dark: #ffffff;
-            --text-main: #0f172a;           /* Gris Slate Profundo */
-            --text-muted: #64748b;          /* Gris Slate Medio */
-            --bg-page: #f1f5f9;             /* Fondo Suave */
-            --card-white: #ffffff;
-            --border-light: #e2e8f0;
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --text-main: #1a1a1a;           /* Texto Principal */
+            --text-muted: #666666;          /* Texto Secundario */
+            --bg-page: #ffffff;             /* Fondo Blanco */
+            --card-white: rgba(255, 255, 255, 0.15);
+            --border-light: #e0e0e0;
+            --shadow-md: 0 4px 6px -1px rgba(0, 102, 204, 0.1), 0 2px 4px -2px rgba(0, 102, 204, 0.1);
         }
 
         * {
@@ -32,24 +34,84 @@
            2. Tipografía & Layout Base
            ----------------------------------------------------------- */
         body {
-            /* Pila de fuentes de sistema para rendimiento y look nativo */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
             background-color: var(--bg-page);
             color: var(--text-main);
             min-height: 100vh;
-            display: grid;
-            place-items: center; /* Centrado perfecto con Grid */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 24px;
+            position: relative;
         }
-
+        
         .main-card {
             width: 100%;
             max-width: 480px;
-            background: var(--card-white);
+            background: rgba(255, 255, 255, 0.15); /* Ultra transparente */
             padding: 48px;
-            border-radius: 16px; /* Bordes menos exagerados, más serios */
+            border-radius: 16px;
             box-shadow: var(--shadow-md);
-            border: 1px solid var(--border-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(1px); /* Casi sin blur */
+            z-index: 10;
+            position: relative;
+        }
+        
+        .background-logo {
+            position: fixed;
+            bottom: 200px; /* Más abajo para que sea visible */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            opacity: 0.4; /* Más opaco para que las letras se vean mejor */
+            pointer-events: none;
+        }
+        
+        .background-logo img {
+            width: 350px;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid rgba(0, 102, 204, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 102, 204, 0.4);
+        }
+        
+        .background-logo .brand-name {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--brand-primary);
+            text-align: center;
+            letter-spacing: -2px;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo-image {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 16px;
+            border-radius: 50%; /* Logo redondo */
+            border: 3px solid var(--brand-primary);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .logo-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 102, 204, 0.3);
+        }
+        
+        .brand-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--brand-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         /* -----------------------------------------------------------
@@ -82,7 +144,7 @@
         }
 
         .sub-description {
-            color: var(--text-muted);
+            color: #1a1a1a;
             font-size: 15px;
             line-height: 1.6;
         }
@@ -129,24 +191,10 @@
             box-shadow: 0 8px 16px rgba(29, 78, 216, 0.2);
         }
 
-        /* Contenedor del icono, look menos "emoji suelto" */
-        .icon-container {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            margin-right: 16px;
-            font-size: 16px;
-            background: rgba(226, 232, 240, 0.8);
+        .primary .label {
+            color: var(--text-on-dark);
         }
 
-        .primary .icon-container {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Asegura que el texto ocupe el espacio */
         .label {
             flex: 1;
         }
@@ -185,28 +233,30 @@
 <body>
     <div class="main-card">
         <div class="header-content">
-            <span class="version-tag">Admin v0.9</span>
-            <h1>Control de Usuarios</h1>
-            <p class="sub-description">Portal administrativo para la gestión de cuentas y permisos.</p>
+           <!-- <span class="version-tag">v1.0</span> -->
+            <h1>Gestión de Usuarios</h1>
+            <p class="sub-description"><strong>Panel de control para administrar cuentas y accesos</strong></p>
         </div>
         
         <nav class="nav-stack">
-            <a href="usuario?accion=listar" class="nav-link primary">
-                <div class="icon-container">👥</div>
-                <div class="label">Directorio Completo</div>
-                <span class="chevron">-></span>
+            <a href="usuario?accion=listar" class="nav-link">
+                <div class="label">Ver Todos los Usuarios</div>
+                <span class="chevron">→</span>
             </a>
             
             <a href="crear.jsp" class="nav-link">
-                <div class="icon-container">👤</div>
-                <div class="label">Registrar Nuevo Perfil</div>
-                <span class="chevron">-></span>
+                <div class="label">Crear Nueva Cuenta</div>
+                <span class="chevron">→</span>
             </a>
         </nav>
         
-        <div class="page-footer">
-            <p>EA4 Tarea | Desarrollado por Nelson Diaz • 2026</p>
-        </div>
+    </div>
+    
+    <!-- Logo de fondo grande -->
+    <div class="background-logo">
+        <img src="images/WhatsApp Image 2026-04-07 at 10.59.53 AM.jpeg" alt="E-form Logo" 
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="brand-name" style="display: none;">E-form</div>
     </div>
 </body>
 </html>

@@ -1,12 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List" %>
 <%@ page import="com.mycompany.modelo.Usuario" %>
+<%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usuarios del Sistema</title>
+    <title>Lista de Usuarios | E-form</title>
     <style>
         * {
             margin: 0;
@@ -16,25 +16,78 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
             min-height: 100vh;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: rgba(255, 255, 255, 0.15); /* Ultra transparente */
             border-radius: 15px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             overflow: hidden;
+            backdrop-filter: blur(1px); /* Casi sin blur */
+            z-index: 10;
+            position: relative;
+        }
+        
+        .background-logo {
+            position: fixed;
+            bottom: 200px; /* Más abajo para que sea visible */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            opacity: 0.4; /* Más opaco para que las letras se vean mejor */
+            pointer-events: none;
+        }
+        
+        .background-logo img {
+            width: 380px;
+            height: 380px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 5px solid rgba(0, 102, 204, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 102, 204, 0.3);
+        }
+        
+        .background-logo .brand-name {
+            font-size: 52px;
+            font-weight: 800;
+            color: #0066cc;
+            text-align: center;
+            letter-spacing: -2px;
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
             color: white;
             padding: 30px;
             text-align: center;
+        }
+        
+        .logo-container {
+            margin-bottom: 20px;
+        }
+        
+        .logo-image {
+            max-width: 80px;
+            height: auto;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+        
+        .brand-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         
         .header h1 {
@@ -74,22 +127,22 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
             color: white;
         }
         
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
         }
         
         .btn-secondary {
-            background: #6c757d;
+            background: #0066cc;
             color: white;
         }
         
         .btn-secondary:hover {
-            background: #545b62;
+            background: #004499;
         }
         
         .content {
@@ -212,21 +265,21 @@
         }
         
         .btn-edit {
-            background: #ffc107;
-            color: #212529;
+            background: #0066cc;
+            color: white;
         }
         
         .btn-edit:hover {
-            background: #e0a800;
+            background: #004499;
         }
         
         .btn-delete {
-            background: #dc3545;
+            background: #0066cc;
             color: white;
         }
         
         .btn-delete:hover {
-            background: #c82333;
+            background: #004499;
         }
         
         .empty-state {
@@ -298,16 +351,16 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Usuarios del Sistema</h1>
-            <div class="subtitle">Gestiona todos los usuarios registrados en la plataforma</div>
+            <h1>Usuarios Registrados</h1>
+            <div class="subtitle">Gestiona todas las cuentas del sistema</div>
         </div>
         
         <div class="actions-bar">
             <a href="index.jsp" class="btn btn-secondary">
-                ← Inicio
+                ← Menú Principal
             </a>
             <a href="crear.jsp" class="btn btn-primary">
-                + Nuevo Usuario
+                + Agregar Usuario
             </a>
         </div>
         
@@ -384,21 +437,27 @@
                 </div>
             <% } else { %>
                 <div class="empty-state">
-                    <div class="icon">📭</div>
-                    <h3>No hay usuarios registrados</h3>
-                    <p>Comienza agregando tu primer usuario al sistema</p>
-                    <a href="crear.jsp" class="btn btn-primary">Crear Primer Usuario</a>
-                </div>
+                        <h3 style="color: #000000; font-size: 24px; font-weight: bold;"><strong>No hay usuarios aún</strong></h3>
+                        <p style="color: #000000; font-size: 18px; font-weight: bold;"><strong>Empieza agregando la primera cuenta al sistema</strong></p>
+                        <a href="crear.jsp" class="btn btn-primary">Crear Primer Usuario</a>
+                    </div>
             <% } %>
         </div>
     </div>
     
     <script>
         function confirmarEliminacion(id, nombre) {
-            if (confirm('¿Estás seguro de que deseas eliminar a "' + nombre + '"?\n\nEsta acción no se puede deshacer.')) {
+            if (confirm('¿Quieres eliminar a "' + nombre + '"?\n\nEsta acción no se puede revertir.')) {
                 window.location.href = 'usuario?accion=eliminar&id=' + id;
             }
         }
     </script>
+    
+    <!-- Logo de fondo grande -->
+    <div class="background-logo">
+        <img src="images/WhatsApp Image 2026-04-07 at 10.59.53 AM.jpeg" alt="E-form Logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="brand-name" style="display: none;">E-form</div>
+    </div>
 </body>
 </html>

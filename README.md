@@ -1,6 +1,6 @@
 # Sistema de Gestión de Usuarios
 
-Aplicación web completa en Java para gestión de usuarios utilizando Maven, Servlets, JSP y MySQL.
+Aplicación web desarrollada con Java Servlets y JSP para administrar usuarios de manera sencilla y eficiente.
 
 ## 📋 Requisitos
 

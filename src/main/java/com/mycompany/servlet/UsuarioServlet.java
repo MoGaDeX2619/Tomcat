@@ -2,23 +2,21 @@ package com.mycompany.servlet;
 
 import com.mycompany.dao.UsuarioDAO;
 import com.mycompany.modelo.Usuario;
+import com.mycompany.util.GeneradorID;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Servlet para manejar operaciones CRUD de usuarios
+ * Servlet principal para manejar las operaciones de usuarios
  * @author Nelson Diaz
  */
-// Mapeo del servlet con la anotación para Jakarta EE 10
-@WebServlet("/usuario") 
 public class UsuarioServlet extends HttpServlet {
     
     private UsuarioDAO usuarioDAO;
@@ -123,59 +121,91 @@ public class UsuarioServlet extends HttpServlet {
     private void crearUsuario(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        String idUsuarioParam = request.getParameter("idUsuario");
         String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");
         String contrasena = request.getParameter("contrasena");
         String rol = request.getParameter("rol");
+        String cedula = request.getParameter("cedula");
+        String fechaNacimiento = request.getParameter("fechaNacimiento");
         
-        System.out.println("Intentando crear usuario - ID: " + idUsuarioParam + ", Nombre: " + nombre + ", Correo: " + correo + ", Rol: " + rol);
+        System.out.println("=== CREANDO USUARIO CON ID PERSONALIZADO ===");
+        System.out.println("Nombre: " + nombre);
+        System.out.println("Correo: " + correo);
+        System.out.println("Rol: " + rol);
+        System.out.println("Cédula: " + cedula);
+        System.out.println("Fecha Nacimiento: " + fechaNacimiento);
         
-        // Convertir contraseña a MD5 antes de validar
-        String contrasenaHasheada = convertirMD5(contrasena);
-        
-        List<String> errores = validarUsuario(nombre, correo, contrasena, rol);
-        
-        // Validar ID si se proporciona
-        int idUsuario = 0;
-        if (idUsuarioParam != null && !idUsuarioParam.trim().isEmpty()) {
-            try {
-                idUsuario = Integer.parseInt(idUsuarioParam);
-                if (idUsuario <= 0) {
-                    errores.add("El ID debe ser un número positivo");
-                }
-            } catch (NumberFormatException e) {
-                errores.add("El ID debe ser un número válido");
-            }
-        }
-        
-        if (!errores.isEmpty()) {
-            System.out.println("Errores de validación: " + errores);
-            request.setAttribute("errores", errores);
-            // Se pasa un objeto temporal para no perder los datos escritos en el form
-            request.setAttribute("usuario", new Usuario(idUsuario, nombre, correo, contrasena, rol));
-            request.getRequestDispatcher("/crear.jsp").forward(request, response);
+        // Validar parámetros
+        if (nombre == null || correo == null || contrasena == null || rol == null || cedula == null || fechaNacimiento == null) {
+            request.setAttribute("mensaje", "Todos los campos son obligatorios");
+            request.setAttribute("tipoMensaje", "error");
+            listarUsuarios(request, response);
             return;
         }
         
-        Usuario usuario = new Usuario(idUsuario, nombre, correo, contrasenaHasheada, rol);
+        // Validar datos del usuario
+        List<String> errores = validarUsuario(nombre, correo, contrasena, rol, cedula, fechaNacimiento);
+        if (!errores.isEmpty()) {
+            request.setAttribute("errores", errores);
+            request.setAttribute("mensaje", "Por favor corrige los errores del formulario");
+            request.setAttribute("tipoMensaje", "error");
+            
+            // Crear objeto usuario para mantener los datos en el formulario
+            Usuario usuarioTemporal = new Usuario(0, nombre, correo, contrasena, rol, cedula, fechaNacimiento);
+            request.setAttribute("usuario", usuarioTemporal);
+            
+            request.getRequestDispatcher("crear.jsp").forward(request, response);
+            return;
+        }
         
-        System.out.println("Llamando a usuarioDAO.crearUsuarioConID()");
-        boolean creado = usuarioDAO.crearUsuarioConID(usuario);
+        // Generar ID personalizado basado en cédula y fecha de nacimiento
+        String idPersonalizado;
+        int idUsuario;
+        try {
+            // Limpiar cédula
+            String cedulaLimpia = GeneradorID.limpiarCedula(cedula);
+            idPersonalizado = GeneradorID.generarIDPersonalizado(cedulaLimpia, fechaNacimiento);
+            idUsuario = GeneradorID.convertirIDANumero(idPersonalizado);
+            
+            System.out.println("ID generado personalizado: " + idPersonalizado + " (número: " + idUsuario + ")");
+            
+            // Verificar si el ID ya existe
+            if (usuarioDAO.existeID(idUsuario)) {
+                request.setAttribute("mensaje", "El ID generado " + idPersonalizado + " ya está en uso. Intenta con otra cédula o fecha.");
+                request.setAttribute("tipoMensaje", "error");
+                listarUsuarios(request, response);
+                return;
+            }
+            
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("mensaje", "Error al generar ID: " + e.getMessage());
+            request.setAttribute("tipoMensaje", "error");
+            listarUsuarios(request, response);
+            return;
+        }
+        
+        // Hashear la contraseña
+        String contrasenaHasheada = convertirMD5(contrasena);
+        
+        // Crear objeto usuario con ID personalizado
+        Usuario usuario = new Usuario(idUsuario, nombre, correo, contrasenaHasheada, rol, cedula, fechaNacimiento);
+        
+        System.out.println("Llamando a usuarioDAO.crearUsuario() con ID personalizado");
+        boolean creado = usuarioDAO.crearUsuario(usuario);
         
         if (creado) {
-            System.out.println("Usuario creado exitosamente");
-            request.setAttribute("mensaje", "Usuario creado exitosamente");
+            System.out.println("Usuario creado exitosamente con ID personalizado: " + idPersonalizado);
+            request.setAttribute("mensaje", "¡Usuario agregado correctamente! ID asignado: " + idPersonalizado);
             request.setAttribute("tipoMensaje", "exito");
         } else {
             System.out.println("Error al crear el usuario");
-            // Verificar si el error fue por ID duplicado o correo duplicado
-            if (idUsuario > 0 && usuarioDAO.existeID(idUsuario)) {
-                request.setAttribute("mensaje", "No se pudo crear el usuario: El ID " + idUsuario + " ya está en uso. Por favor, elige otro ID o elimina el usuario existente primero.");
-            } else if (usuarioDAO.existeCorreo(correo)) {
-                request.setAttribute("mensaje", "No se pudo crear el usuario: El correo electrónico ya está registrado. Por favor, usa otro correo.");
+            // Verificar si el error fue por correo duplicado
+            if (usuarioDAO.existeCorreo(correo)) {
+                request.setAttribute("mensaje", "No se pudo crear: El correo electrónico ya está registrado. Usa otro correo.");
+            } else if (usuarioDAO.existeCedula(cedula)) {
+                request.setAttribute("mensaje", "No se pudo crear: La cédula ya está registrada. Usa otra cédula.");
             } else {
-                request.setAttribute("mensaje", "Error al crear el usuario. Verifica la consola para más detalles.");
+                request.setAttribute("mensaje", "Ocurrió un error al guardar el usuario. Intenta de nuevo.");
             }
             request.setAttribute("tipoMensaje", "error");
         }
@@ -192,20 +222,22 @@ public class UsuarioServlet extends HttpServlet {
             String correo = request.getParameter("correo");
             String contrasena = request.getParameter("contrasena");
             String rol = request.getParameter("rol");
+            String cedula = request.getParameter("cedula");
+            String fechaNacimiento = request.getParameter("fechaNacimiento");
             
             // Convertir contraseña a MD5 antes de validar
             String contrasenaHasheada = convertirMD5(contrasena);
             
-            List<String> errores = validarUsuario(nombre, correo, contrasena, rol);
+            List<String> errores = validarUsuario(nombre, correo, contrasena, rol, cedula, fechaNacimiento);
             
             if (!errores.isEmpty()) {
                 request.setAttribute("errores", errores);
-                request.setAttribute("usuario", new Usuario(idUsuario, nombre, correo, contrasena, rol));
+                request.setAttribute("usuario", new Usuario(idUsuario, nombre, correo, contrasena, rol, cedula, fechaNacimiento));
                 request.getRequestDispatcher("/editar.jsp").forward(request, response);
                 return;
             }
             
-            Usuario usuario = new Usuario(idUsuario, nombre, correo, contrasenaHasheada, rol);
+            Usuario usuario = new Usuario(idUsuario, nombre, correo, contrasenaHasheada, rol, cedula, fechaNacimiento);
             
             if (usuarioDAO.actualizarUsuario(usuario)) {
                 request.setAttribute("mensaje", "Usuario actualizado exitosamente");
@@ -247,55 +279,69 @@ public class UsuarioServlet extends HttpServlet {
         listarUsuarios(request, response);
     }
     
-    private List<String> validarUsuario(String nombre, String correo, String contrasena, String rol) {
+    private List<String> validarUsuario(String nombre, String correo, String contrasena, String rol, String cedula, String fechaNacimiento) {
         // Ahora sí funcionará porque importamos java.util.ArrayList
         List<String> errores = new ArrayList<>();
         
         if (nombre == null || nombre.trim().isEmpty()) {
-            errores.add("El nombre no puede estar vacío");
+            errores.add("El nombre es obligatorio");
         }
         
         if (correo == null || correo.trim().isEmpty()) {
-            errores.add("El correo no puede estar vacío");
+            errores.add("El correo es obligatorio");
         } else if (!correo.contains("@") || !correo.contains(".")) {
-            errores.add("El correo debe tener un formato válido (contener @ y .)");
+            errores.add("El correo no es válido (debe tener @ y .)");
         }
         
         if (contrasena == null || contrasena.trim().isEmpty()) {
-            errores.add("La contraseña no puede estar vacía");
+            errores.add("La contraseña es obligatoria");
         } else {
             // Validar longitud mínima
             if (contrasena.length() < 6) {
-                errores.add("La contraseña debe tener al menos 6 caracteres");
+                errores.add("La contraseña necesita al menos 6 caracteres");
             }
             
             // Validar que tenga al menos una mayúscula
             if (!contrasena.matches(".*[A-Z].*")) {
-                errores.add("La contraseña debe contener al menos una letra mayúscula");
+                errores.add("La contraseña debe tener una letra mayúscula");
             }
             
             // Validar que tenga al menos un número
             if (!contrasena.matches(".*[0-9].*")) {
-                errores.add("La contraseña debe contener al menos un número");
+                errores.add("La contraseña debe tener un número");
             }
             
             // Validar que tenga al menos un símbolo
             if (!contrasena.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
-                errores.add("La contraseña debe contener al menos un símbolo (!@#$%^&*)");
+                errores.add("La contraseña debe tener un símbolo (!@#$%^&*)");
             }
         }
         
         if (rol == null || rol.trim().isEmpty()) {
-            errores.add("El rol no puede estar vacío");
+            errores.add("Debes seleccionar un tipo de usuario");
+        }
+        
+        // Validar cédula
+        if (cedula == null || cedula.trim().isEmpty()) {
+            errores.add("La cédula es obligatoria");
+        } else if (!GeneradorID.validarCedula(cedula)) {
+            errores.add("La cédula debe tener al menos 4 dígitos");
+        }
+        
+        // Validar fecha de nacimiento
+        if (fechaNacimiento == null || fechaNacimiento.trim().isEmpty()) {
+            errores.add("La fecha de nacimiento es obligatoria");
+        } else if (!GeneradorID.validarFechaNacimiento(fechaNacimiento)) {
+            errores.add("La fecha de nacimiento no es válida (use formato YYYY-MM-DD)");
         }
         
         return errores;
     }
     
     /**
-     * Convierte una cadena a su representación en MD5
-     * @param texto cadena a convertir
-     * @return hash MD5 en formato hexadecimal
+     * Genera el hash MD5 de una contraseña
+     * @param texto la contraseña a convertir
+     * @return el hash en formato hexadecimal
      */
     private String convertirMD5(String texto) {
         try {
