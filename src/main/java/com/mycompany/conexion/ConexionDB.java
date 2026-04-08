@@ -13,7 +13,7 @@ public class ConexionDB {
     // Datos de conexión
     private static final String URL = "jdbc:mysql://127.0.0.1:3306/nelson_prueba?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
     private static final String USUARIO = "root";
-    private static final String CONTRASENA = "mogadex123";
+    private static final String CONTRASENA = "0000";
     
     /**
      * Obtiene una conexión a la base de datos
